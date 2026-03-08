@@ -25,15 +25,16 @@ Our system provides a centralized digital platform where users can:
 - Image proof for faster issue verification
 # Tech Stack
 Frontend:
-- HTML
-- CSS
-- JavaScript
+- React
 
 # Backend:
-- Python (Flask)
+- Node+Express
 
 # Database:
-- MySQL / SQLite
+- Mongodb
+# Deployment
+- Frontend=Vercel
+- Backeng=Render
 
 # Tools:
 - GitHub
