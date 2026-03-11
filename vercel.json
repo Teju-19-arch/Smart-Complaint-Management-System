@@ -1,8 +1,8 @@
 {
-  "builds": [
+  "routes": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build"
+      "src": "/(.*)",
+      "dest": "/frontend/index.html"
     }
   ]
 }
