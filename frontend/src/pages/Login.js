@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { loginUser, setToken, errorMessage } from "../api";
 
-function Login({ onLogin, goToRegister, notice }) {
+function Login({ setUser }) {
 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
@@ -9,9 +8,23 @@ const [error, setError] = useState("");
 
 const [attempts, setAttempts] = useState(0);
 const [blocked, setBlocked] = useState(false);
-const [loading, setLoading] = useState(false);
 
-const handleLogin = async (e) => {
+/* Student accounts */
+
+const students = [
+{ email: "student1@gmail.com", password: "12345" },
+{ email: "student2@gmail.com", password: "12345" },
+{ email: "student3@gmail.com", password: "12345" }
+];
+
+/* Admin account */
+
+const admin = {
+email: "admin@campus.com",
+password: "admin123"
+};
+
+const handleLogin = (e) => {
 
 e.preventDefault();
 
@@ -24,30 +37,43 @@ setError("Too many login attempts. Try again in 30 seconds.");
 return;
 }
 
-if (!cleanEmail || !password) {
-setError("Please enter your email and password.");
+/* Admin login */
+
+if (
+cleanEmail === admin.email.toLowerCase() &&
+password === admin.password
+) {
+
+setAttempts(0);
+setError("");
+setUser("admin");
 return;
+
 }
 
-setLoading(true);
-setError("");
+/* Student login */
 
-try {
+const student = students.find(
+s =>
+s.email.toLowerCase() === cleanEmail &&
+s.password === password
+);
 
-const res = await loginUser({ email: cleanEmail, password });
+if (student) {
 
-setToken(res.data.token);
 setAttempts(0);
-onLogin(res.data.user);
+setError("");
+setUser("student");
+return;
 
-} catch (err) {
+}
 
 /* Incorrect login */
 
 const newAttempts = attempts + 1;
 setAttempts(newAttempts);
 
-setError(errorMessage(err));
+setError("Incorrect email or password. Try again.");
 
 /* Block after 5 failed attempts */
 
@@ -62,12 +88,6 @@ setAttempts(0);
 setBlocked(false);
 setError("");
 }, 30000);
-
-}
-
-} finally {
-
-setLoading(false);
 
 }
 
@@ -106,31 +126,18 @@ required
 <button
 type="submit"
 style={styles.button}
-disabled={blocked || loading}
+disabled={blocked}
 >
-{loading ? "Logging in..." : "Login"}
+Login
 </button>
 
 </form>
-
-{notice && !error && (
-<p style={styles.success}>
-{notice}
-</p>
-)}
 
 {error && (
 <p style={styles.error}>
 {error}
 </p>
 )}
-
-<p style={styles.switchText}>
-New here?{" "}
-<span style={styles.link} onClick={goToRegister}>
-Create Account
-</span>
-</p>
 
 </div>
 
@@ -190,23 +197,6 @@ cursor: "pointer"
 error: {
 marginTop: "10px",
 color: "red"
-},
-
-success: {
-marginTop: "10px",
-color: "#2e7d32"
-},
-
-switchText: {
-marginTop: "15px",
-fontSize: "14px",
-color: "#555"
-},
-
-link: {
-color: "#667eea",
-fontWeight: "bold",
-cursor: "pointer"
 }
 
 };
