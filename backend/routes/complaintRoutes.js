@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Complaint = require("../models/complaint");
 const multer = require("multer");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 // storage
 const storage = multer.diskStorage({
@@ -17,7 +18,7 @@ const upload = multer({ storage: storage });
 
 
 // CREATE COMPLAINT
-router.post("/add", upload.single("image"), async (req, res) => {
+router.post("/add", requireAuth, upload.single("image"), async (req, res) => {
 
   try {
 
@@ -39,7 +40,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
 
 
 // GET ALL COMPLAINTS
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
 
   try {
 
@@ -57,7 +58,7 @@ router.get("/", async (req, res) => {
 
 
 // RESOLVE COMPLAINT
-router.put("/resolve/:id", async (req, res) => {
+router.put("/resolve/:id", requireAuth, requireAdmin, async (req, res) => {
 
   try {
 

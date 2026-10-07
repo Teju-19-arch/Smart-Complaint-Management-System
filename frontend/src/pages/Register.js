@@ -1,31 +1,41 @@
 import React, { useState } from "react";
-import { loginUser, setToken, errorMessage } from "../api";
+import { registerUser, errorMessage } from "../api";
 
-function Login({ onLogin, goToRegister, notice }) {
+function Register({ onRegistered, goToLogin }) {
 
+const [name, setName] = useState("");
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
 const [error, setError] = useState("");
-
-const [attempts, setAttempts] = useState(0);
-const [blocked, setBlocked] = useState(false);
 const [loading, setLoading] = useState(false);
 
-const handleLogin = async (e) => {
+const handleRegister = async (e) => {
 
 e.preventDefault();
 
+const cleanName = name.trim();
 const cleanEmail = email.trim().toLowerCase();
 
-/* Check rate limit */
+/* Client-side checks (the server validates again) */
 
-if (blocked) {
-setError("Too many login attempts. Try again in 30 seconds.");
+if (!cleanName || !cleanEmail || !password || !confirmPassword) {
+setError("Please fill in all fields.");
 return;
 }
 
-if (!cleanEmail || !password) {
-setError("Please enter your email and password.");
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+setError("Please enter a valid email address.");
+return;
+}
+
+if (password.length < 8) {
+setError("Password must be at least 8 characters.");
+return;
+}
+
+if (password !== confirmPassword) {
+setError("Passwords do not match.");
 return;
 }
 
@@ -34,36 +44,18 @@ setError("");
 
 try {
 
-const res = await loginUser({ email: cleanEmail, password });
+await registerUser({
+name: cleanName,
+email: cleanEmail,
+password,
+confirmPassword
+});
 
-setToken(res.data.token);
-setAttempts(0);
-onLogin(res.data.user);
+onRegistered(cleanEmail);
 
 } catch (err) {
 
-/* Incorrect login */
-
-const newAttempts = attempts + 1;
-setAttempts(newAttempts);
-
 setError(errorMessage(err));
-
-/* Block after 5 failed attempts */
-
-if (newAttempts >= 5) {
-
-setBlocked(true);
-
-setError("Too many attempts. Login blocked for 30 seconds.");
-
-setTimeout(() => {
-setAttempts(0);
-setBlocked(false);
-setError("");
-}, 30000);
-
-}
 
 } finally {
 
@@ -80,10 +72,19 @@ return (
 <div style={styles.card}>
 
 <h2 style={styles.title}>
-🎓 Smart Campus Complaint System
+🎓 Create Account
 </h2>
 
-<form onSubmit={handleLogin} style={styles.form}>
+<form onSubmit={handleRegister} style={styles.form}>
+
+<input
+type="text"
+placeholder="Full Name"
+value={name}
+onChange={(e) => setName(e.target.value)}
+style={styles.input}
+required
+/>
 
 <input
 type="email"
@@ -96,9 +97,18 @@ required
 
 <input
 type="password"
-placeholder="Enter Password"
+placeholder="Password (min 8 characters)"
 value={password}
 onChange={(e) => setPassword(e.target.value)}
+style={styles.input}
+required
+/>
+
+<input
+type="password"
+placeholder="Confirm Password"
+value={confirmPassword}
+onChange={(e) => setConfirmPassword(e.target.value)}
 style={styles.input}
 required
 />
@@ -106,18 +116,12 @@ required
 <button
 type="submit"
 style={styles.button}
-disabled={blocked || loading}
+disabled={loading}
 >
-{loading ? "Logging in..." : "Login"}
+{loading ? "Registering..." : "Register"}
 </button>
 
 </form>
-
-{notice && !error && (
-<p style={styles.success}>
-{notice}
-</p>
-)}
 
 {error && (
 <p style={styles.error}>
@@ -126,9 +130,9 @@ disabled={blocked || loading}
 )}
 
 <p style={styles.switchText}>
-New here?{" "}
-<span style={styles.link} onClick={goToRegister}>
-Create Account
+Already have an account?{" "}
+<span style={styles.link} onClick={goToLogin}>
+Back to Login
 </span>
 </p>
 
@@ -143,7 +147,7 @@ Create Account
 const styles = {
 
 page: {
-height: "100vh",
+minHeight: "100vh",
 display: "flex",
 justifyContent: "center",
 alignItems: "center",
@@ -192,11 +196,6 @@ marginTop: "10px",
 color: "red"
 },
 
-success: {
-marginTop: "10px",
-color: "#2e7d32"
-},
-
 switchText: {
 marginTop: "15px",
 fontSize: "14px",
@@ -211,4 +210,4 @@ cursor: "pointer"
 
 };
 
-export default Login;
+export default Register;
